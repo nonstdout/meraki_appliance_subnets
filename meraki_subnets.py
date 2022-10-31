@@ -16,7 +16,14 @@ def main():
     dashboard = connect_to_dashboard_api(meraki)
     # orgs = get_orgs(dashboard)
     # print(get_org(dashboard, ''))
-    print(get_appliance_subnets(dashboard, 'N_671599294431629896'))
+    # print(get_appliance_subnets(dashboard, 'N_671599294431629896'))
+    sub_to_add = {
+        "id": "666",
+        "name": "TERSSTT",
+        "subnet": "10.10.10.0/24",
+        "applianceIp": "10.10.10.1",
+    }
+    print(create_appliance_subnets(dashboard, 'N_671599294431629896', **sub_to_add))
 
 
 def check_api_key_set(key):
@@ -91,6 +98,22 @@ def save_subnet_info(appliance_subnets, network_id, backup_filename):
             f.write(json.dumps(existing_subs, indent=2))
     except Exception as e:
         logging.INFO(e)
+
+def create_appliance_subnets(dashboard, network_id, **kwargs):
+    app = dashboard.appliance
+    _id = kwargs['id']
+    name = kwargs['name']
+
+    sub = kwargs
+    sub.pop('id')
+    sub.pop('name')
+
+    try:
+        return app.createNetworkApplianceVlan(network_id, _id, name, **sub)
+    except Exception as e:
+        logging.INFO(e)
+
+
 
 if __name__ == "__main__":
     main()

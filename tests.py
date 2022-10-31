@@ -1,5 +1,5 @@
 from meraki_subnets import check, check_api_key_set, connect_to_dashboard_api, get_orgs, get_org, save_subnet_info
-from meraki_subnets import get_appliance_network_id, get_appliance_subnets
+from meraki_subnets import get_appliance_network_id, get_appliance_subnets, create_appliance_subnets
 import os, json
 import pytest
 
@@ -45,11 +45,32 @@ class Devices:
 class Appliance:
     def __init__(self):
         self.appliance_vlans = [{'id': 502, 'networkId': 'N_671599294431629896', 'name': 'Inside - Showcase devices', 'applianceIp': '192.168.2.1', 'subnet': '192.168.2.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [{'start': '192.168.2.200', 'end': '192.168.2.210', 'comment': 'ESXi,ISE,AD '}], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089', 'ipv6': {'enabled': False}}, {'id': 503, 'networkId': 'N_671599294431629896', 'name': 'DMZ', 'applianceIp': '192.168.3.1', 'subnet': '192.168.3.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759058', 'ipv6': {'enabled': False}}, {'id': 508, 'networkId': 'N_671599294431629896', 'name': 'VOICE', 'applianceIp': '192.168.8.1', 'subnet': '192.168.8.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759055', 'ipv6': {'enabled': False}}, {'id': 509, 'networkId': 'N_671599294431629896', 'name': 'GUEST', 'applianceIp': '192.168.9.1', 'subnet': '192.168.9.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759056', 'ipv6': {'enabled': False}}, {'id': 510, 'networkId': 'N_671599294431629896', 'name': 'CORP-WIFI', 'applianceIp': '192.168.10.1', 'subnet': '192.168.10.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759057', 'ipv6': {'enabled': False}}, {'id': 514, 'networkId': 'N_671599294431629896', 'name': 'SHOWCASE_MGMT', 'applianceIp': '192.168.0.1', 'subnet': '192.168.0.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759054', 'ipv6': {'enabled': False}}]
-    
     def getNetworkApplianceVlans(self, network_id):
         if network_id == 'N_671599294431629896':
             return self.appliance_vlans
         return None
+
+    def createNetworkApplianceVlan(self, network_id, _id, name, **kwargs):
+        sub = {
+            'id': _id, 
+            'networkId': network_id, 
+            'name': name, 
+            'applianceIp': kwargs['applianceIp'], 
+            'subnet': kwargs['subnet'],
+            'fixedIpAssignments': {}, 
+            'reservedIpRanges': [], 
+            'dnsNameservers': 'upstream_dns', 
+            'dhcpHandling': 'Run a DHCP server', 
+            'dhcpLeaseTime': '1 day', 
+            'dhcpBootOptionsEnabled': False, 
+            'dhcpOptions': [], 
+            'interfaceId': '671599294431631089', 
+            'ipv6': {'enabled': False}
+        }
+        self.appliance_vlans.append(sub)
+        return sub
+
+
 
 
 
@@ -115,3 +136,54 @@ def test_save_subnet_info():
             existing_subs = json.load(f)
     assert existing_subs == {'N_671599294431629896':[{'id': 502, 'networkId': 'N_671599294431629896', 'name': 'Inside - Showcase devices', 'applianceIp': '192.168.2.1', 'subnet': '192.168.2.0/24'}]}
     os.remove(test_backup_file)
+
+def test_create_appliance_subnets():
+    mock_dash_object = Meraki()
+    dashboard = mock_dash_object.DashboardAPI()
+    assert get_appliance_subnets(dashboard, 'N_671599294431629896', save=False) == [{'id': 502, 'networkId': 'N_671599294431629896', 'name': 'Inside - Showcase devices', 'applianceIp': '192.168.2.1', 'subnet': '192.168.2.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [{'start': '192.168.2.200', 'end': '192.168.2.210', 'comment': 'ESXi,ISE,AD '}], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089', 'ipv6': {'enabled': False}}, {'id': 503, 'networkId': 'N_671599294431629896', 'name': 'DMZ', 'applianceIp': '192.168.3.1', 'subnet': '192.168.3.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759058', 'ipv6': {'enabled': False}}, {'id': 508, 'networkId': 'N_671599294431629896', 'name': 'VOICE', 'applianceIp': '192.168.8.1', 'subnet': '192.168.8.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759055', 'ipv6': {'enabled': False}}, {'id': 509, 'networkId': 'N_671599294431629896', 'name': 'GUEST', 'applianceIp': '192.168.9.1', 'subnet': '192.168.9.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759056', 'ipv6': {'enabled': False}}, {'id': 510, 'networkId': 'N_671599294431629896', 'name': 'CORP-WIFI', 'applianceIp': '192.168.10.1', 'subnet': '192.168.10.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759057', 'ipv6': {'enabled': False}}, {'id': 514, 'networkId': 'N_671599294431629896', 'name': 'SHOWCASE_MGMT', 'applianceIp': '192.168.0.1', 'subnet': '192.168.0.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759054', 'ipv6': {'enabled': False}}]
+    sub_to_add = {
+        "id": "666",
+        "name": "TERSSTT",
+        "subnet": "10.10.10.0/24",
+        "applianceIp": "10.10.10.1"
+    }
+
+    assert create_appliance_subnets(dashboard, 'N_671599294431629896', **sub_to_add) == {
+            'id': "666", 
+            'networkId': 'N_671599294431629896', 
+            'name': 'TERSSTT', 
+            'applianceIp': '10.10.10.1', 
+            'subnet': '10.10.10.0/24', 
+            'fixedIpAssignments': {}, 
+            'reservedIpRanges': [], 
+            'dnsNameservers': 'upstream_dns', 
+            'dhcpHandling': 'Run a DHCP server', 
+            'dhcpLeaseTime': '1 day', 
+            'dhcpBootOptionsEnabled': False, 
+            'dhcpOptions': [], 
+            'interfaceId': '671599294431631089', 
+            'ipv6': {'enabled': False}
+        }
+    assert get_appliance_subnets(dashboard, 'N_671599294431629896', save=False) == [
+        {'id': 502, 'networkId': 'N_671599294431629896', 'name': 'Inside - Showcase devices', 'applianceIp': '192.168.2.1', 'subnet': '192.168.2.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [{'start': '192.168.2.200', 'end': '192.168.2.210', 'comment': 'ESXi,ISE,AD '}], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089', 'ipv6': {'enabled': False}}, 
+        {'id': 503, 'networkId': 'N_671599294431629896', 'name': 'DMZ', 'applianceIp': '192.168.3.1', 'subnet': '192.168.3.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759058', 'ipv6': {'enabled': False}}, 
+        {'id': 508, 'networkId': 'N_671599294431629896', 'name': 'VOICE', 'applianceIp': '192.168.8.1', 'subnet': '192.168.8.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759055', 'ipv6': {'enabled': False}}, 
+        {'id': 509, 'networkId': 'N_671599294431629896', 'name': 'GUEST', 'applianceIp': '192.168.9.1', 'subnet': '192.168.9.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759056', 'ipv6': {'enabled': False}}, 
+        {'id': 510, 'networkId': 'N_671599294431629896', 'name': 'CORP-WIFI', 'applianceIp': '192.168.10.1', 'subnet': '192.168.10.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759057', 'ipv6': {'enabled': False}}, 
+        {'id': 514, 'networkId': 'N_671599294431629896', 'name': 'SHOWCASE_MGMT', 'applianceIp': '192.168.0.1', 'subnet': '192.168.0.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759054', 'ipv6': {'enabled': False}},
+        {
+            'id': '666', 
+            'networkId': 'N_671599294431629896', 
+            'name': 'TERSSTT', 
+            'applianceIp': '10.10.10.1', 
+            'subnet': '10.10.10.0/24', 
+            'fixedIpAssignments': {}, 
+            'reservedIpRanges': [], 
+            'dnsNameservers': 'upstream_dns', 
+            'dhcpHandling': 'Run a DHCP server', 
+            'dhcpLeaseTime': '1 day', 
+            'dhcpBootOptionsEnabled': False, 
+            'dhcpOptions': [], 
+            'interfaceId': '671599294431631089', 
+            'ipv6': {'enabled': False}
+        }]
