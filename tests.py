@@ -1,4 +1,4 @@
-from meraki_subnets import check, check_api_key_set, connect_to_dashboard_api, get_orgs
+from meraki_subnets import check, check_api_key_set, connect_to_dashboard_api, get_orgs, get_org
 import pytest
 
 # Mock the dashboard api for testing
@@ -58,3 +58,13 @@ def test_orgs():
     dashboard = mock_dash_object.DashboardAPI()
     assert get_orgs(dashboard) == [{'id': '541362', 'name': 'test_org'}]
 
+def test_get_org():
+    dashboard = mock_dash_object.DashboardAPI()
+    assert get_org(dashboard, None) == None
+    assert get_org(dashboard, 123456) == None
+    assert get_org(dashboard, 'test_org123') == None
+    assert get_org(dashboard, 541362) == {'id': '541362', 'name': 'test_org'}
+    assert get_org(dashboard, '541362') == {'id': '541362', 'name': 'test_org'}
+    assert get_org(dashboard, 'test_org') == {'id': '541362', 'name': 'test_org'}
+    assert get_org(dashboard, 'tEst_OrG') == {'id': '541362', 'name': 'test_org'}
+    
