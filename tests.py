@@ -1,5 +1,5 @@
-from meraki_subnets import check, check_api_key_set, connect_to_dashboard_api, get_orgs, get_org, save_subnet_info
-from meraki_subnets import get_appliance_network_id, get_appliance_subnets, create_appliance_subnets
+from meraki_subnets import check_api_key_set, connect_to_dashboard_api, get_orgs, get_org, load_from_csv, save_subnet_info, update_appliance_subnet
+from meraki_subnets import get_appliance_network_id, get_appliance_subnets, create_appliance_subnets, restore_appliance_subnets, get_devices_from_file
 import os, json
 import pytest
 
@@ -44,11 +44,9 @@ class Devices:
 
 class Appliance:
     def __init__(self):
-        self.appliance_vlans = [{'id': 502, 'networkId': 'N_671599294431629896', 'name': 'Inside - Showcase devices', 'applianceIp': '192.168.2.1', 'subnet': '192.168.2.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [{'start': '192.168.2.200', 'end': '192.168.2.210', 'comment': 'ESXi,ISE,AD '}], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089', 'ipv6': {'enabled': False}}, {'id': 503, 'networkId': 'N_671599294431629896', 'name': 'DMZ', 'applianceIp': '192.168.3.1', 'subnet': '192.168.3.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759058', 'ipv6': {'enabled': False}}, {'id': 508, 'networkId': 'N_671599294431629896', 'name': 'VOICE', 'applianceIp': '192.168.8.1', 'subnet': '192.168.8.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759055', 'ipv6': {'enabled': False}}, {'id': 509, 'networkId': 'N_671599294431629896', 'name': 'GUEST', 'applianceIp': '192.168.9.1', 'subnet': '192.168.9.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759056', 'ipv6': {'enabled': False}}, {'id': 510, 'networkId': 'N_671599294431629896', 'name': 'CORP-WIFI', 'applianceIp': '192.168.10.1', 'subnet': '192.168.10.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759057', 'ipv6': {'enabled': False}}, {'id': 514, 'networkId': 'N_671599294431629896', 'name': 'SHOWCASE_MGMT', 'applianceIp': '192.168.0.1', 'subnet': '192.168.0.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759054', 'ipv6': {'enabled': False}}]
+        self.appliance_vlans = {'N_671599294431629896':[{'id': 502, 'networkId': 'N_671599294431629896', 'name': 'Inside - Showcase devices', 'applianceIp': '192.168.2.1', 'subnet': '192.168.2.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [{'start': '192.168.2.200', 'end': '192.168.2.210', 'comment': 'ESXi,ISE,AD '}], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089', 'ipv6': {'enabled': False}}, {'id': 503, 'networkId': 'N_671599294431629896', 'name': 'DMZ', 'applianceIp': '192.168.3.1', 'subnet': '192.168.3.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759058', 'ipv6': {'enabled': False}}, {'id': 508, 'networkId': 'N_671599294431629896', 'name': 'VOICE', 'applianceIp': '192.168.8.1', 'subnet': '192.168.8.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759055', 'ipv6': {'enabled': False}}, {'id': 509, 'networkId': 'N_671599294431629896', 'name': 'GUEST', 'applianceIp': '192.168.9.1', 'subnet': '192.168.9.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759056', 'ipv6': {'enabled': False}}, {'id': 510, 'networkId': 'N_671599294431629896', 'name': 'CORP-WIFI', 'applianceIp': '192.168.10.1', 'subnet': '192.168.10.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759057', 'ipv6': {'enabled': False}}, {'id': 514, 'networkId': 'N_671599294431629896', 'name': 'SHOWCASE_MGMT', 'applianceIp': '192.168.0.1', 'subnet': '192.168.0.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431759054', 'ipv6': {'enabled': False}}]}
     def getNetworkApplianceVlans(self, network_id):
-        if network_id == 'N_671599294431629896':
-            return self.appliance_vlans
-        return None
+        return self.appliance_vlans.get(network_id)
 
     def createNetworkApplianceVlan(self, network_id, _id, name, **kwargs):
         sub = {
@@ -57,32 +55,52 @@ class Appliance:
             'name': name, 
             'applianceIp': kwargs['applianceIp'], 
             'subnet': kwargs['subnet'],
-            'fixedIpAssignments': {}, 
-            'reservedIpRanges': [], 
-            'dnsNameservers': 'upstream_dns', 
+            'reservedIpRanges': [],
+            'dnsNameservers': 'upstream_dns',
             'dhcpHandling': 'Run a DHCP server', 
             'dhcpLeaseTime': '1 day', 
             'dhcpBootOptionsEnabled': False, 
             'dhcpOptions': [], 
-            'interfaceId': '671599294431631089', 
-            'ipv6': {'enabled': False}
-        }
-        self.appliance_vlans.append(sub)
+            'interfaceId': '671599294431631089'
+            }
+
+
+        if kwargs.get('ipv6'):
+            sub['ipv6'] = kwargs['ipv6']
+
+        if not self.appliance_vlans.get(network_id):
+            self.appliance_vlans[network_id] = []
+        self.appliance_vlans.get(network_id).append(sub)
         return sub
+    
+    def updateNetworkApplianceVlan(self, network_id, vlan_id, **kwargs):
+        sub = {
+            'networkId': network_id, 
+            'vlanId': vlan_id,
+            'applianceIp': kwargs['applianceIp'], 
+            'subnet': kwargs['subnet'],
+            'reservedIpRanges': [],
+            'dnsNameservers': 'upstream_dns',
+            'dhcpHandling': 'Run a DHCP server', 
+            'dhcpLeaseTime': '1 day', 
+            'dhcpBootOptionsEnabled': False, 
+            'dhcpOptions': [], 
+            'interfaceId': '671599294431631089'
+            }
 
 
+        if kwargs.get('ipv6'):
+            sub['ipv6'] = kwargs['ipv6']
 
+        if not self.appliance_vlans.get(network_id):
+            self.appliance_vlans[network_id] = []
+        self.appliance_vlans.get(network_id).append(sub)
+        return sub
 
 
 
 mock_dash_object = Meraki()
 
-
-def test():
-    assert "hello" == "hello"
-
-def test_meraki_subnet():
-    assert check() == True
 
 def test_empty_api_key_fails():
     """not having env var set should raise sys.exit()"""
@@ -154,15 +172,13 @@ def test_create_appliance_subnets():
             'name': 'TERSSTT', 
             'applianceIp': '10.10.10.1', 
             'subnet': '10.10.10.0/24', 
-            'fixedIpAssignments': {}, 
             'reservedIpRanges': [], 
             'dnsNameservers': 'upstream_dns', 
             'dhcpHandling': 'Run a DHCP server', 
             'dhcpLeaseTime': '1 day', 
             'dhcpBootOptionsEnabled': False, 
             'dhcpOptions': [], 
-            'interfaceId': '671599294431631089', 
-            'ipv6': {'enabled': False}
+            'interfaceId': '671599294431631089',
         }
     assert get_appliance_subnets(dashboard, 'N_671599294431629896', save=False) == [
         {'id': 502, 'networkId': 'N_671599294431629896', 'name': 'Inside - Showcase devices', 'applianceIp': '192.168.2.1', 'subnet': '192.168.2.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [{'start': '192.168.2.200', 'end': '192.168.2.210', 'comment': 'ESXi,ISE,AD '}], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089', 'ipv6': {'enabled': False}}, 
@@ -177,13 +193,119 @@ def test_create_appliance_subnets():
             'name': 'TERSSTT', 
             'applianceIp': '10.10.10.1', 
             'subnet': '10.10.10.0/24', 
-            'fixedIpAssignments': {}, 
             'reservedIpRanges': [], 
             'dnsNameservers': 'upstream_dns', 
             'dhcpHandling': 'Run a DHCP server', 
             'dhcpLeaseTime': '1 day', 
             'dhcpBootOptionsEnabled': False, 
             'dhcpOptions': [], 
-            'interfaceId': '671599294431631089', 
-            'ipv6': {'enabled': False}
+            'interfaceId': '671599294431631089'
         }]
+    
+def test_restore_appliance_subnets():
+    mock_dash_object = Meraki()
+    dashboard = mock_dash_object.DashboardAPI()
+    test_backup_file = "test_backup.json"
+    if os.path.exists(test_backup_file):
+        os.remove(test_backup_file)
+    assert not os.path.exists(test_backup_file)
+    subs = {"N_671599294431629894": [
+    {
+      "id": 500,
+      "networkId": "N_671599294431629894",
+      "name": "SHOWCASEMGMT",
+      "applianceIp": "192.168.0.254",
+      "subnet": "192.168.0.0/24",
+      'reservedIpRanges': [], 
+      'dnsNameservers': 'upstream_dns',
+      'dhcpHandling': 'Do not respond to DHCP requests',
+      'interfaceId': '671599294431631089'
+    },
+    {
+      "id": 504,
+      "networkId": "N_671599294431629894",
+      "name": "inside",
+      "applianceIp": "192.168.4.254",
+      "subnet": "192.168.4.0/24",
+      'reservedIpRanges': [], 
+      'dnsNameservers': 'upstream_dns',
+      'dhcpHandling': 'Do not respond to DHCP requests',
+      'interfaceId': '671599294431631089'
+    },
+    {
+      "id": 506,
+      "networkId": "N_671599294431629894",
+      "name": "outside",
+      "applianceIp": "192.168.6.254",
+      "subnet": "192.168.6.0/24",
+      'reservedIpRanges': [], 
+      'dnsNameservers': 'upstream_dns',
+      'dhcpHandling': 'Do not respond to DHCP requests',
+      'interfaceId': '671599294431631089'
+    }
+    ]
+    }
+
+    with open(test_backup_file, "w") as f:
+        f.write(json.dumps(subs))
+    mock_dash_object.DashboardAPI().appliance.appliance_vlans = {}
+    restore_appliance_subnets(dashboard, 'N_671599294431629894', test_backup_file)
+    assert get_appliance_subnets(dashboard, 'N_671599294431629894', save=False) == [
+        {'id': 500, 'networkId': 'N_671599294431629894', 'name': 'SHOWCASEMGMT', 
+        'applianceIp': '192.168.0.254', 'subnet': '192.168.0.0/24', 
+        'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 
+        'dhcpHandling': 'Run a DHCP server', 
+        'dhcpLeaseTime': '1 day', 
+        'dhcpBootOptionsEnabled': False, 
+        'dhcpOptions': [], 
+        'interfaceId': '671599294431631089'},
+        {'id': 504, 'networkId': 'N_671599294431629894', 'name': 'inside', 
+        'applianceIp': '192.168.4.254', 'subnet': '192.168.4.0/24', 
+        'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 
+        'dhcpHandling': 'Run a DHCP server', 
+        'dhcpLeaseTime': '1 day', 
+        'dhcpBootOptionsEnabled': False, 
+        'dhcpOptions': [], 
+        'interfaceId': '671599294431631089'}, 
+        {'id': 506, 'networkId': 'N_671599294431629894', 
+        'name': 'outside', 'applianceIp': '192.168.6.254', 
+        'subnet': '192.168.6.0/24', 'reservedIpRanges': [], 
+        'dnsNameservers': 'upstream_dns', 
+        'dhcpHandling': 'Run a DHCP server', 
+        'dhcpLeaseTime': '1 day', 
+        'dhcpBootOptionsEnabled': False, 
+        'dhcpOptions': [], 
+        'interfaceId': '671599294431631089'}]
+    os.remove(test_backup_file)
+
+def test_load_from_csv():
+    devices_file = 'test_devices.csv'
+    if os.path.exists(devices_file):
+        os.remove(devices_file)
+    with open(devices_file, 'w') as f:
+        f.write("serial,vlan,subnet\nQ2RN-ZDH8-W3RU,10,192.168.10.1/24\nQ2RN-ZDH8-W3RU,20,192.168.20.1/24\nQ2RN-ZDH8-W2RU,20,192.168.20.1/24\nQ2RN-ZDH8-W2RU,10,192.168.10.1/24\nQ2RN-ZDH8-W3RU,30,192.168.30.1/24\nQ2RN-ZDH8-W3RU,40,192.168.40.1/24\nQ2RN-ZDH8-W1RU,10,192.168.10.1/24\nQ2RN-ZDH8-W1RU,40,192.168.40.1/24")
+    with open(devices_file, 'r') as f:
+        assert load_from_csv(f) == {'Q2RN-ZDH8-W3RU': {'subnets': {('40', '192.168.40.1/24'), ('10', '192.168.10.1/24'), ('20', '192.168.20.1/24'), ('30', '192.168.30.1/24')}}, 'Q2RN-ZDH8-W2RU': {'subnets': {('10', '192.168.10.1/24'), ('20', '192.168.20.1/24')}}, 'Q2RN-ZDH8-W1RU': {'subnets': {('40', '192.168.40.1/24'), ('10', '192.168.10.1/24')}}}
+    os.remove(devices_file)
+
+def test_get_devices_from_file():
+    devices_file = 'test_devices.csv'
+    with pytest.raises(FileNotFoundError) as excinfo:
+        get_devices_from_file(devices_file)
+        assert "Please create devices.csv file" in excinfo
+    if os.path.exists(devices_file):
+        os.remove(devices_file)
+    with open(devices_file, 'w') as f:
+        f.write("serial,vlan,subnet\nQ2RN-ZDH8-W3RU,10,192.168.10.1/24\nQ2RN-ZDH8-W3RU,20,192.168.20.1/24\nQ2RN-ZDH8-W2RU,20,192.168.20.1/24\nQ2RN-ZDH8-W2RU,10,192.168.10.1/24\nQ2RN-ZDH8-W3RU,30,192.168.30.1/24\nQ2RN-ZDH8-W3RU,40,192.168.40.1/24\nQ2RN-ZDH8-W1RU,10,192.168.10.1/24\nQ2RN-ZDH8-W1RU,40,192.168.40.1/24")
+    assert get_devices_from_file(devices_file) == {'Q2RN-ZDH8-W3RU': {'subnets': {('40', '192.168.40.1/24'), ('10', '192.168.10.1/24'), ('20', '192.168.20.1/24'), ('30', '192.168.30.1/24')}}, 'Q2RN-ZDH8-W2RU': {'subnets': {('10', '192.168.10.1/24'), ('20', '192.168.20.1/24')}}, 'Q2RN-ZDH8-W1RU': {'subnets': {('40', '192.168.40.1/24'), ('10', '192.168.10.1/24')}}}
+    os.remove(devices_file)
+
+def test_update_appliance_subnet():
+    mock_dash_object = Meraki()
+    dashboard = mock_dash_object.DashboardAPI()
+    sub_to_update = {
+        "id": "666",
+        "subnet": "11.11.11.0/24",
+        "applianceIp": "11.11.11.1"
+    }
+    assert update_appliance_subnet(dashboard, 'N_671599294431629894', 666, **sub_to_update) == {'networkId': 'N_671599294431629894', 'vlanId': 666, 'applianceIp': '11.11.11.1', 'subnet': '11.11.11.0/24', 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089'}
