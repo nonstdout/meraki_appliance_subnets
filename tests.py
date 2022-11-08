@@ -1,5 +1,5 @@
-from meraki_subnets import check_api_key_set, connect_to_dashboard_api, get_orgs, get_org, load_from_csv, save_subnet_info, update_appliance_subnet
-from meraki_subnets import get_appliance_network_id, get_appliance_subnets, create_appliance_subnets, restore_appliance_subnets, get_devices_from_file
+from meraki_subnets import check_api_key_set, connect_to_dashboard_api, get_config_template, get_orgs, get_org, load_from_csv, save_subnet_info, update_appliance_subnet, valid_ip, valid_vlan_id
+from meraki_subnets import get_appliance_network_id, get_appliance_subnets, create_appliance_subnets, restore_appliance_subnets, get_devices_from_file, clean_data, valid_serial
 import os, json
 import pytest
 
@@ -25,8 +25,7 @@ class Meraki:
         pass
     
     def DashboardAPI(self):
-        api = DashboardAPI()
-        return api
+        return DashboardAPI()
 
 class Organizations:
     def __init__(self):
@@ -34,6 +33,9 @@ class Organizations:
     
     def getOrganizations(self):
         return self.orgs
+    
+    def getOrganizationConfigTemplates(self, org_id):
+        return [{'id': 'N_671599294431643613', 'name': 'London-Access-Layer', 'productTypes': ['switch', 'appliance'], 'timeZone': 'America/Los_Angeles'}, {'id': 'N_671599294431643780', 'name': 'London Firewall', 'productTypes': ['appliance'], 'timeZone': 'America/Los_Angeles'}, {'id': 'N_671599294431643781', 'name': 'London-Wifi', 'productTypes': ['wireless'], 'timeZone': 'America/Los_Angeles'}]
 
 class Devices:
     def __init__(self):
@@ -309,3 +311,54 @@ def test_update_appliance_subnet():
         "applianceIp": "11.11.11.1"
     }
     assert update_appliance_subnet(dashboard, 'N_671599294431629894', 666, **sub_to_update) == {'networkId': 'N_671599294431629894', 'vlanId': 666, 'applianceIp': '11.11.11.1', 'subnet': '11.11.11.0/24', 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431631089'}
+
+def test_clean_data():
+    spaces_data = [
+        {"serial": "Q2RN-ZDH8-W3RU ", "vlan": " 1", "subnet": "  10. 10.1 0.1/24 "},
+        {"serial": " Q2RN- ZD H8-W3RU ", "vlan": "12 3 ", "subnet": "10.11.11.5/24  "},
+    ]
+    assert clean_data(spaces_data) == [
+        {"serial": "Q2RN-ZDH8-W3RU", "vlan": "1", "subnet": "10.10.10.1/24"},
+        {"serial": "Q2RN-ZDH8-W3RU", "vlan": "123", "subnet": "10.11.11.5/24"},
+    ]
+
+    ints_data = [
+        {"serial": " Q2RN-ZDH8-W3RU ", "vlan": 1, "subnet": "  10.10.10.1/24 "},
+        {"serial": " Q2RN-ZDH8-W3RU ", "vlan": 123, "subnet": "10.11.11.5/24"},
+    ]
+    assert clean_data(ints_data) == [
+        {"serial": "Q2RN-ZDH8-W3RU", "vlan": "1", "subnet": "10.10.10.1/24"},
+        {"serial": "Q2RN-ZDH8-W3RU", "vlan": "123", "subnet": "10.11.11.5/24"},
+    ]
+
+def test_validate_serial():
+    good_serials = ["1234-2234-1111", "Q2RN-ZDH8-W3RU"] 
+    bad_serials = ["Q-QWFP-AART", "QSTF_123W_STFW", "QWFP-STFF-£2ST", "QWFP-QRP2-f2WF", ""]
+    for serial in good_serials:
+        assert valid_serial(serial)
+    for serial in bad_serials:
+        assert not valid_serial(serial)
+
+def test_validate_vlan_id():
+    good_ids = [1234, 100, 200, "300", "5", 1, 3967]
+    bad_ids = ["nine", 0, "4095", 3968, -13, ""]
+    for vlan_id in good_ids:
+        assert valid_vlan_id(vlan_id)
+    for vlan_id in bad_ids:
+        assert not valid_vlan_id(vlan_id)
+
+def test_validate_ip():
+    good_ips = [("10.0.1.1/24", "10.0.0.0/16"), ("192.168.0.1/22", "192.168.0.0/16"), ("10.0.0.1/8", "10.0.0.0/8"), ("172.16.2.254/24", "172.16.0.0/22")]
+    bad_ips = [("127.0.0.1/24","127.0.0.0/24"),("224.0.0.1/24", "224.0.0.0/24"),("0.1.1.1/1", "1.1.1.1/24"), ("592.168.0.1/22", "2.2.2.2"), ("10.1.1000.1/8","1.2.3.4/21"), ("172..16.2.254/24","1.2.3.4/21")]
+    for ip, supernet in good_ips:
+        assert valid_ip(ip, supernet)
+    for ip, supernet in bad_ips:
+        assert not valid_ip(ip, supernet)
+
+def test_get_config_templates():
+    org_id = "548548"
+    mock_dash_object = Meraki()
+    dashboard = mock_dash_object.DashboardAPI()
+    assert get_config_template(dashboard, org_id, product_types=["appliance"]) == [{'id': 'N_671599294431643613', 'name': 'London-Access-Layer', 'productTypes': ['switch', 'appliance'], 'timeZone': 'America/Los_Angeles'}, {'id': 'N_671599294431643780', 'name': 'London Firewall', 'productTypes': ['appliance'], 'timeZone': 'America/Los_Angeles'}]
+    assert get_config_template(dashboard, org_id, product_types=["appliance"]) == [{'id': 'N_671599294431643613', 'name': 'London-Access-Layer', 'productTypes': ['switch', 'appliance'], 'timeZone': 'America/Los_Angeles'}, {'id': 'N_671599294431643780', 'name': 'London Firewall', 'productTypes': ['appliance'], 'timeZone': 'America/Los_Angeles'}]
+    assert get_config_template(dashboard, org_id, product_types=["appliance", "switch"]) == [{'id': 'N_671599294431643613', 'name': 'London-Access-Layer', 'productTypes': ['switch', 'appliance'], 'timeZone': 'America/Los_Angeles'},{'id': 'N_671599294431643780', 'name': 'London Firewall', 'productTypes': ['appliance'], 'timeZone': 'America/Los_Angeles'}]
