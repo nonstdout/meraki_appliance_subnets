@@ -3,6 +3,7 @@ test_backup.json
 
 # backup data
 backup.json
+data.csv
 
 # Editors
 .vscode/

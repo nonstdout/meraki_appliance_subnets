@@ -1,4 +1,4 @@
-from meraki_subnets import check_api_key_set, connect_to_dashboard_api, get_config_template, get_orgs, get_org, load_from_csv, save_subnet_info, update_appliance_subnet, valid_ip, valid_vlan_id
+from meraki_subnets import check_api_key_set, connect_to_dashboard_api, convert_data_to_csv, get_config_template, get_orgs, get_org, load_from_csv, save_subnet_info, update_appliance_subnet, valid_ip, valid_vlan_id
 from meraki_subnets import get_appliance_network_id, get_appliance_subnets, create_appliance_subnets, restore_appliance_subnets, get_devices_from_file, clean_data, valid_serial
 import os, json
 import pytest
@@ -362,3 +362,41 @@ def test_get_config_templates():
     assert get_config_template(dashboard, org_id, product_types=["appliance"]) == [{'id': 'N_671599294431643613', 'name': 'London-Access-Layer', 'productTypes': ['switch', 'appliance'], 'timeZone': 'America/Los_Angeles'}, {'id': 'N_671599294431643780', 'name': 'London Firewall', 'productTypes': ['appliance'], 'timeZone': 'America/Los_Angeles'}]
     assert get_config_template(dashboard, org_id, product_types=["appliance"]) == [{'id': 'N_671599294431643613', 'name': 'London-Access-Layer', 'productTypes': ['switch', 'appliance'], 'timeZone': 'America/Los_Angeles'}, {'id': 'N_671599294431643780', 'name': 'London Firewall', 'productTypes': ['appliance'], 'timeZone': 'America/Los_Angeles'}]
     assert get_config_template(dashboard, org_id, product_types=["appliance", "switch"]) == [{'id': 'N_671599294431643613', 'name': 'London-Access-Layer', 'productTypes': ['switch', 'appliance'], 'timeZone': 'America/Los_Angeles'},{'id': 'N_671599294431643780', 'name': 'London Firewall', 'productTypes': ['appliance'], 'timeZone': 'America/Los_Angeles'}]
+
+
+def test_convert_data_to_csv():
+    data = {
+        "N_671599294431629894": [
+            {
+            "id": 1,
+            "networkId": "N_671599294431629894",
+            "name": "Default",
+            "applianceIp": "192.168.128.1",
+            "subnet": "192.168.128.0/24",
+            "fixedIpAssignments": {},
+            "reservedIpRanges": [],
+            "dnsNameservers": "upstream_dns",
+            "dhcpHandling": "Run a DHCP server",
+            "dhcpLeaseTime": "1 day",
+            "dhcpBootOptionsEnabled": False,
+            "dhcpOptions": [],
+            "interfaceId": "671599294431938072"
+            },
+            {
+            "id": 123,
+            "networkId": "N_671599294431629894",
+            "name": "test1",
+            "applianceIp": "10.11.11.5",
+            "subnet": "10.11.11.0/24",
+            "fixedIpAssignments": {},
+            "reservedIpRanges": [],
+            "dnsNameservers": "upstream_dns",
+            "dhcpHandling": "Run a DHCP server",
+            "dhcpLeaseTime": "1 day",
+            "dhcpBootOptionsEnabled": False,
+            "dhcpOptions": [],
+            "interfaceId": "671599294431938073"
+            }
+        ]}
+    assert convert_data_to_csv(data) == [{'id': 1, 'networkId': 'N_671599294431629894', 'name': 'Default', 'applianceIp': '192.168.128.1', 'subnet': '192.168.128.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431938072'}, {'id': 123, 'networkId': 'N_671599294431629894', 'name': 'test1', 'applianceIp': '10.11.11.5', 'subnet': '10.11.11.0/24', 'fixedIpAssignments': {}, 'reservedIpRanges': [], 'dnsNameservers': 'upstream_dns', 'dhcpHandling': 'Run a DHCP server', 'dhcpLeaseTime': '1 day', 'dhcpBootOptionsEnabled': False, 'dhcpOptions': [], 'interfaceId': '671599294431938073'}]
+

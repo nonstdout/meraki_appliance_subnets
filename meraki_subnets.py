@@ -262,8 +262,48 @@ def get_config_template(dashboard, org_id, product_types=['appliance', "switch",
     except Exception as e:
         print(e)
 
+def save_data_to_csv(data, filename="data.csv", headers=["site","networkId", "id", "subnet", "applianceIp"]):
+    memo = {}
+    try:
+        with open(filename, 'w') as f:
+            writer = csv.DictWriter(f, fieldnames=headers, extrasaction='ignore')
+            writer.writeheader()
+            for row in data:
+                network = row.get('networkId')
+                if network in memo:
+                    site_name = memo[network]
+                else:
+                    site_name = meraki.DashboardAPI().networks.getNetwork(network).get('name')
+                    memo[network] = site_name
+                row['site'] = site_name
+                writer.writerow(row)
+            print("saved data to csv")
+    except Exception as e:
+        print("failed to save data to csv")
+        print(e)
 
+    
+def convert_data_to_csv(data):
+    data = [*data.values()]
+    stuff = [item for sublist in data if sublist for item in sublist]
+    print(stuff)
+    return stuff
+    
+def save_backup_to_csv(input_file="backup.json", output_file="data.csv"):
+    if not os.path.exists(input_file):
+        print("Please run a device backup to save configs")
+        return
+    try:
+        with open(input_file, 'r') as f:
+            data = json.load(f)
+            print(data)
+            print("read data from csv")
+            save_data_to_csv(convert_data_to_csv(data), output_file)
+    except Exception as e:
+        print("failed to read data from csv")
+        print(e)
 
 
 if __name__ == "__main__":
-    main()
+    save_backup_to_csv()
+    # main()
