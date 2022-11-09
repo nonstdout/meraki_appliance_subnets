@@ -7,8 +7,7 @@ import re
 
 
 def main():
-    print("Run subnet_updater.py instead")
-
+    print("This is a library, run subnet_updater.py instead.")
 
 def check_api_key_set(key):
     # print("Retrieving MERAKI_DASHBOARD_API_KEY from env vars")
@@ -159,6 +158,18 @@ def save_data_to_csv(data, filename="devices.csv", headers=["site","networkId", 
     except Exception as e:
         print("failed to save data to csv")
         print(e)
+
+def update_appliance_subnets_from_csv(dashboard, devices_filename='devices.csv', supernet=None):
+    devices = get_devices_from_file(devices_filename, supernet=supernet, reformat=False)
+    for device in devices:
+        sub = {
+            "applianceIp": device.get('applianceIp'),
+            "subnet": device.get('subnet')
+            }
+        network_id = device.get('networkId')
+        vlan = device.get('id')
+        update_appliance_subnet(dashboard, network_id, vlan, **sub)
+
 
 if __name__ == "__main__":
     main()

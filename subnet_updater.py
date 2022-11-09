@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
-from meraki_subnets import check_api_key_set, get_config_template, save_data_to_csv
-from meraki_subnets import get_devices_from_file, update_appliance_subnet
+from meraki_subnets import check_api_key_set, get_config_template, save_data_to_csv, update_appliance_subnets_from_csv
 import meraki, os
 import argparse
-
-def update_appliance_subnets_from_csv(dashboard, devices_filename='devices.csv', supernet=None):
-    devices = get_devices_from_file(devices_filename, supernet=supernet, reformat=False)
-    for device in devices:
-        sub = {
-            "applianceIp": device.get('applianceIp'),
-            "subnet": device.get('subnet')
-            }
-        network_id = device.get('networkId')
-        vlan = device.get('id')
-        update_appliance_subnet(dashboard, network_id, vlan, **sub)
 
 def save_current_subnets():
     appliance_templates = get_config_template(dashboard, org_id, ['appliance'])
