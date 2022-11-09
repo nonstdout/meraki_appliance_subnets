@@ -6,7 +6,9 @@ import argparse
 def save_current_subnets():
     appliance_templates = get_config_template(dashboard, org_id, ['appliance'])
     appliance_networks = [dashboard.organizations.getOrganizationNetworks(org_id, configTemplateId=template['id']) for template in appliance_templates][0]
-    appliance_vlans = [dashboard.appliance.getNetworkApplianceVlans(network['id']) for network in appliance_networks][0]
+    appliance_vlans = []
+    for network in appliance_networks:
+        appliance_vlans += dashboard.appliance.getNetworkApplianceVlans(network['id'])
     save_data_to_csv(appliance_vlans)
 
 def update_subnets():
