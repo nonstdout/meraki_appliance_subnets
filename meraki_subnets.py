@@ -24,7 +24,7 @@ def main():
 
 
 def check_api_key_set(key):
-    logging.info("Retrieving MERAKI_DASHBOARD_API_KEY from env vars")
+    # print("Retrieving MERAKI_DASHBOARD_API_KEY from env vars")
     if not os.environ.get(key):
         sys.exit("API Key not set as environment variable")
 
@@ -122,30 +122,36 @@ def restore_appliance_subnets(dashboard, network_id, backup_filename=backup_file
             sub.pop('networkId')
             create_appliance_subnets(dashboard, network_id, **sub)
 
-def get_devices_from_file(filename):
+def get_devices_from_file(filename, reformat=True, supernet=None):
     if not os.path.exists(filename):
-        raise FileNotFoundError("Please create devices.csv file")
+        raise FileNotFoundError("Please create devices.csv file or run save current subnets")
     file_type = filename.split(".")[1]
     with open(filename, 'r') as f:   
         file_types = {
-            "csv": load_from_csv(f)
+            "csv": load_from_csv(f, reformat, supernet)
         }
         return file_types[file_type]
 
-def load_from_csv(_file):
+def load_from_csv(_file, reformat=True, supernet=None):
     data = list(csv.DictReader(_file))
     processed_data = clean_data(data)
-    validate_data(processed_data)
-    return reformat_data(processed_data)   
+    validate_data(processed_data, supernet)
+    if reformat:
+        return reformat_data(processed_data)
+    return processed_data
 
 def validate_data(data, supernet=None):
     for item in data:
-        valid_serial(item.get('serial'))
-        valid_vlan_id(item.get('vlan'))
+        if item.get('serial'):
+            valid_serial(item.get('serial'))
+        if item.get('vlan'):
+            valid_vlan_id(item.get('vlan'))
         if supernet:
             valid_ip(item.get('subnet'), supernet) 
         else:
-            print("Can't validate ip address is valid without supernet information")
+            # Supernet is validated by the API
+            pass
+            # print("Can't validate ip address is valid without supernet information")
         #### need to add query to get the template supernet
 
 def get_appliance_supernet(dashboard, org_id, vlan_id, product_types=['appliance', "switch", "wireless"]):
@@ -262,7 +268,7 @@ def get_config_template(dashboard, org_id, product_types=['appliance', "switch",
     except Exception as e:
         print(e)
 
-def save_data_to_csv(data, filename="data.csv", headers=["site","networkId", "id", "subnet", "applianceIp"]):
+def save_data_to_csv(data, filename="devices.csv", headers=["site","networkId", "id", "subnet", "applianceIp"]):
     memo = {}
     try:
         with open(filename, 'w') as f:
@@ -286,7 +292,6 @@ def save_data_to_csv(data, filename="data.csv", headers=["site","networkId", "id
 def convert_data_to_csv(data):
     data = [*data.values()]
     stuff = [item for sublist in data if sublist for item in sublist]
-    print(stuff)
     return stuff
     
 def save_backup_to_csv(input_file="backup.json", output_file="data.csv"):
@@ -296,7 +301,6 @@ def save_backup_to_csv(input_file="backup.json", output_file="data.csv"):
     try:
         with open(input_file, 'r') as f:
             data = json.load(f)
-            print(data)
             print("read data from csv")
             save_data_to_csv(convert_data_to_csv(data), output_file)
     except Exception as e:
