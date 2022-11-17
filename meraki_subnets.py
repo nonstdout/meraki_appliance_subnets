@@ -139,7 +139,7 @@ def get_config_template(dashboard, org_id, product_types=['appliance', "switch",
     except Exception as e:
         print(e)
 
-def save_data_to_csv(data, filename="devices.csv", headers=["site","networkId", "id", "subnet", "applianceIp"]):
+def save_data_to_csv(dashboard, data, filename="devices.csv", headers=["site","networkId", "id", "subnet", "applianceIp"]):
     memo = {}
     try:
         with open(filename, 'w') as f:
@@ -150,7 +150,7 @@ def save_data_to_csv(data, filename="devices.csv", headers=["site","networkId", 
                 if network in memo:
                     site_name = memo[network]
                 else:
-                    site_name = meraki.DashboardAPI().networks.getNetwork(network).get('name')
+                    site_name = dashboard.networks.getNetwork(network).get('name')
                     memo[network] = site_name
                 row['site'] = site_name
                 writer.writerow(row)

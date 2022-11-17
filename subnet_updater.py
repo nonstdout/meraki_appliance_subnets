@@ -9,7 +9,7 @@ def save_current_subnets():
     appliance_vlans = []
     for network in appliance_networks:
         appliance_vlans += dashboard.appliance.getNetworkApplianceVlans(network['id'])
-    save_data_to_csv(appliance_vlans)
+    save_data_to_csv(dashboard, appliance_vlans)
 
 def update_subnets():
     update_appliance_subnets_from_csv(dashboard)
